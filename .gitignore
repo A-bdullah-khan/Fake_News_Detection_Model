@@ -3,3 +3,4 @@ __pycache__/
 .vscode/
 data/*.csv
 .DS_Store
+models/

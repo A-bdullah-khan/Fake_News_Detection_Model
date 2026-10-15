@@ -42,7 +42,7 @@ def load_and_preprocess_data(fake_path="data/Fake.csv", true_path="data/True.csv
         X, y, test_size=0.25, random_state=42
     )
 
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(stop_words="english")
     Xv_train = vectorizer.fit_transform(X_train)
     Xv_test = vectorizer.transform(X_test)
 

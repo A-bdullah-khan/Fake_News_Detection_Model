@@ -1,9 +1,15 @@
+from pathlib import Path
+
+import joblib
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.tree import DecisionTreeClassifier
 
 from src.preprocess import clean_text
+
+MODELS_DIR = Path("models")
+VECTORIZER_FILE = "vectorizer.joblib"
 
 
 def train_and_evaluate_models(Xv_train, Xv_test, y_train, y_test):
@@ -39,6 +45,46 @@ def train_and_evaluate_models(Xv_train, Xv_test, y_train, y_test):
         trained_models[name] = model
 
     return trained_models
+
+
+def _model_filename(name):
+    return name.lower().replace(" ", "_") + ".joblib"
+
+
+def save_artifacts(trained_models, vectorizer, models_dir=MODELS_DIR):
+    """Save trained models and the fitted vectorizer to disk."""
+
+    models_dir = Path(models_dir)
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    joblib.dump(vectorizer, models_dir / VECTORIZER_FILE)
+    for name, model in trained_models.items():
+        joblib.dump(model, models_dir / _model_filename(name))
+
+    print(f"\nSaved {len(trained_models)} models and vectorizer to {models_dir}/")
+
+
+def load_artifacts(models_dir=MODELS_DIR):
+    """Load saved models and vectorizer. Returns None if any file is missing."""
+
+    models_dir = Path(models_dir)
+    model_names = [
+        "Logistic Regression",
+        "Decision Tree",
+        "Gradient Boosting",
+        "Random Forest",
+    ]
+    paths = [models_dir / VECTORIZER_FILE] + [
+        models_dir / _model_filename(name) for name in model_names
+    ]
+    if not all(path.exists() for path in paths):
+        return None
+
+    vectorizer = joblib.load(models_dir / VECTORIZER_FILE)
+    trained_models = {
+        name: joblib.load(models_dir / _model_filename(name)) for name in model_names
+    }
+    return trained_models, vectorizer
 
 
 def predict_news(news_text, vectorizer, trained_models):
